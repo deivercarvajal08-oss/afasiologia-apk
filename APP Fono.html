@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fono Te Ayuda - Terapia Perfecta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Roboto:wght@400,700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: #00bcd4;
+            --color-secondary: #00796b;
+            --color-background: #0d1b2a;
+            --color-card-bg: #f5f0e1; 
+            --color-correct: #4caf50; 
+            --color-incorrect: #f44336; 
+            --color-text: #fff;
+            --color-next-btn: #FF9800;
+            --color-selection: #ffc107;
+        }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background: linear-gradient(135deg, var(--color-background) 0%, #0d283d 100%);
+            color: var(--color-text); 
+            text-align: center; 
+            margin: 0; padding: 0; 
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #game-box {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 4px solid var(--color-primary);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 20px var(--color-primary);
+            position: relative;
+        }
+
+        h1 { 
+            font-family: 'Montserrat', sans-serif;
+            color: var(--color-primary); 
+            font-size: 2.2em; 
+            text-shadow: 0 0 10px var(--color-primary);
+        }
+        
+        .screen { display: none; }
+        .active { display: block; }
+        
+        button { 
+            color: white; border: none; 
+            padding: 15px 20px; font-size: 1.1em; 
+            margin: 8px; cursor: pointer; 
+            border-radius: 8px; width: 260px; 
+            transition: all 0.2s; font-weight: 700;
+            background: #2196f3;
+            box-shadow: 0 4px 0 0 #0d47a1;
+        }
+        
+        button:hover { transform: translateY(-2px); }
+        button:active { transform: translateY(2px); }
+        
+        .option.selected { 
+            background: var(--color-selection) !important; 
+            color: #333;
+            box-shadow: 0 4px 0 0 #e65100; 
+        }
+
+        .option.correct-choice { background: var(--color-correct) !important; }
+
+        #media { 
+            background: var(--color-card-bg); 
+            width: 250px; height: 250px; 
+            display: flex; justify-content: center; align-items: center; 
+            margin: 20px auto; border-radius: 15px;
+            position: relative; overflow: hidden;
+            border: 3px solid var(--color-primary);
+        }
+        
+        img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* Botón de Ayuda Flotante mejorado */
+        .btn-help {
+            position: absolute; bottom: 8px; right: 8px;
+            width: auto; padding: 8px 12px; font-size: 0.75em;
+            background: var(--color-secondary); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        #progress { font-size: 1.1em; color: var(--color-primary); font-weight: bold; margin-bottom: 10px; }
+        .feedback { font-size: 1.4em; font-weight: bold; margin: 10px 0; }
+        .correct { color: var(--color-correct); }
+        .incorrect { color: var(--color-incorrect); }
+
+        #confetti-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="game-box">
+
+        <div id="intro" class="screen active">
+            <img src="https://www.unipamplona.edu.co/unipamplona/portalIG/home_144/recursos/general/29042015/logo_fono.jpg" alt="Logo" style="width: 120px; height: 120px; border-radius: 50%; margin-bottom: 15px;">
+            <h1>Fono te ayuda</h1>
+            <p>App para Terapia y mejorar tu comprension</p>
+            <button onclick="stopAudioAndShowScreen('inicio')">Empezar Sesión</button>
+            <p style="font-size: 0.8em; color: #888; margin-top: 15px;">Autores: Dayber Carvajal & Kevin Guevara</p>
+        </div>
+
+        <div id="inicio" class="screen">
+            <h1>Bienvenido</h1>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                <p>💡 <b>Guía de uso:</b></p>
+                <p>1. Toca <b>una vez</b> para oír la opción.</p>
+                <p>2. Toca <b>dos veces</b> para seleccionar.</p>
+                <p>3. Usa el botón <b>Ayuda</b> si olvidas qué buscar.</p>
+            </div>
+            <button onclick="showScreen('ejercicio'); loadLevel()">Comenzar Nivel 1</button>
+        </div>
+
+        <div id="instrucciones" class="screen">
+            <h1 style="color: #ff9800;">MODO AUDITIVO</h1>
+            <p>Ahora escucha la palabra y búscala en las opciones.</p>
+            <p>Si olvidas la palabra, presiona el botón de <b>Ayuda</b> abajo del emoji.</p>
+            <button onclick="showScreen('ejercicio'); loadLevel()">¡Vamos!</button>
+        </div>
+
+        <div id="ejercicio" class="screen">
+            <div id="progress">Nivel 1/20</div>
+            <p id="instruccion">¿Qué es lo que ves?</p>
+            <div id="media"></div>
+            
+            <div id="opcionesContainer">
+                <button class="option" id="op1"></button>
+                <button class="option" id="op2"></button>
+                <button class="option" id="op3"></button>
+            </div>
+            
+            <div id="feedback" class="feedback"></div>
+            <button id="nextBtn" style="display:none; background: var(--color-next-btn);" onclick="nextLevel()">Siguiente ➡️</button>
+        </div>
+
+        <div id="resultados" class="screen">
+            <div id="confetti-container"></div>
+            <h1 style="color: var(--color-correct);">¡FINALIZADO!</h1>
+            <p id="finalScore" style="font-size: 1.5em;"></p>
+            <p id="finalMessage"></p>
+            <button onclick="location.reload()" style="background: var(--color-correct);">Reiniciar</button>
+        </div>
+
+    </div>
+
+    <script>
+        const niveles = [
+            // 1-10: Visual
+            { img: "https://5aldia.cl/wp-content/uploads/2018/03/manzana.jpg", opciones: ["Manzana", "Pera", "Naranja"], correcta: "Manzana" },
+            { img: "https://i.ibb.co/nsPcbRXG/desktop-wallpaper-pet-png-transparent-pet-png-animal-dog.jpg", opciones: ["Gato", "Perro", "Pájaro"], correcta: "Perro" },
+            { img: "https://cdn.pixabay.com/photo/2016/11/18/17/46/house-1836070_1280.jpg", opciones: ["Casa", "Auto", "Árbol"], correcta: "Casa" },
+            { img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Stilles_Mineralwasser.jpg/285px-Stilles_Mineralwasser.jpg", opciones: ["Jugo", "Leche", "Agua"], correcta: "Agua" },
+            { img: "https://chequeado.com/wp-content/uploads/2021/01/jumpstory-download20210131-152902.jpg", opciones: ["Luna", "Sol", "Estrella"], correcta: "Sol" },
+            { img: "https://lapiedradesisifo.com/wp-content/uploads/2019/04/800px-Libro_de_los_Ep%C3%ADtomes.jpg", opciones: ["Libro", "Lapiz", "Reloj"], correcta: "Libro" },
+            { img: "https://usaditoscars.com/wp-content/uploads/2021/03/carros-usados-caracas-Chevrolet-Aveo.jpg", opciones: ["Avión", "Bicicleta", "Carro"], correcta: "Carro" },
+            { img: "https://traveler.marriott.com/es/wp-content/uploads/sites/2/2018/01/ColombianFood_Paisa.jpg", opciones: ["Comida", "Bebida", "León"], correcta: "Comida" },
+            { img: "https://www.lysaflores.com/blog/wp-content/uploads/2017/07/rose-2442335_960_720.jpg", opciones: ["Fruta", "Flor", "Árbol"], correcta: "Flor" },
+            { img: "https://media.fashionnetwork.com/cdn-cgi/image/fit=contain,width=1000,height=1000,format=auto/m/6190/81b1/9e91/2b90/0e67/9a07/cb54/380f/d84c/cef8/cef8.jpg", opciones: ["Zapato", "Camisa", "Sombrero"], correcta: "Zapato" },
+            // 11-20: Auditivo
+            { opciones: ["Manzana Roja", "Pera Verde", "Naranja Amarilla"], correcta: "Manzana Roja", emoji: "🍎" },
+            { opciones: ["Perro Grande", "Gato Pequeño", "Pájaro Azul"], correcta: "Perro Grande", emoji: "🐕" },
+            { opciones: ["Casa Blanca", "Auto Rojo", "Árbol Alto"], correcta: "Casa Blanca", emoji: "🏠" },
+            { opciones: ["Agua Fría", "Leche Caliente", "Jugo Dulce"], correcta: "Agua Fría", emoji: "💧" },
+            { opciones: ["Sol Brillante", "Luna Llena", "Estrella Fugaz"], correcta: "Sol Brillante", emoji: "☀️" },
+            { opciones: ["Libro Abierto", "Cuaderno Cerrado", "Revista Nueva"], correcta: "Libro Abierto", emoji: "📖" },
+            { opciones: ["Coche Rápido", "Bicicleta Lenta", "Avión Alto"], correcta: "Coche Rápido", emoji: "🚗" },
+            { opciones: ["Comida Caliente", "Bebida Fría", "Postre Dulce"], correcta: "Comida Caliente", emoji: "🍲" },
+            { opciones: ["Flor Bonita", "Planta Verde", "Árbol Grande"], correcta: "Flor Bonita", emoji: "🌸" },
+            { opciones: ["Zapato Nuevo", "Calcetín Viejo", "Sombrero Rojo"], correcta: "Zapato Nuevo", emoji: "👟" }
+        ];
+
+        let currentLevel = 0;
+        let puntuacion = 0;
+        let instruccionesMostradas = false;
+        const totalNiveles = niveles.length;
+
+        const mediaDiv = document.getElementById('media');
+        const instruccionP = document.getElementById('instruccion');
+        const opButtons = [document.getElementById('op1'), document.getElementById('op2'), document.getElementById('op3')];
+        const feedbackDiv = document.getElementById('feedback');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressDiv = document.getElementById('progress');
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopAudioAndShowScreen(id) {
+            window.speechSynthesis.cancel();
+            showScreen(id);
+            if (id === 'inicio') speak('Bienvenido. Un toque para escuchar, dos para elegir.');
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function loadLevel() {
+            if (currentLevel >= totalNiveles) { showResults(); return; }
+
+            if (currentLevel === 10 && !instruccionesMostradas) {
+                instruccionesMostradas = true;
+                showScreen('instrucciones');
+                speak('Atención, ahora pasamos al modo auditivo.');
+                return;
+            }
+
+            const level = niveles[currentLevel];
+            let tempOptions = [...level.opciones];
+            tempOptions.sort(() => Math.random() - 0.5);
+
+            feedbackDiv.innerHTML = '';
+            nextBtn.style.display = 'none';
+            progressDiv.textContent = `Nivel ${currentLevel + 1}/${totalNiveles}`;
+
+            // Lógica unificada para el contenedor de MEDIA con BOTÓN DE AYUDA
+            if (currentLevel < 10) {
+                instruccionP.textContent = "Toca para escuchar, Doble Clic para elegir:";
+                mediaDiv.innerHTML = `
+                    <img src="${level.img}" alt="Imagen">
+                    <button class="btn-help" onclick="speak('¿Qué es lo que ves?')">🔊 Ayuda</button>
+                `;
+                speak("¿Qué es lo que ves?");
+            } else {
+                instruccionP.textContent = "Busca la opción que escuchas (Doble clic):";
+                mediaDiv.innerHTML = `
+                    <span style="font-size: 5em;">${level.emoji}</span>
+                    <button class="btn-help" onclick="speak('${level.correcta}')">🔊 Ayuda</button>
+                `;
+                speak(level.correcta);
+            }
+
+            opButtons.forEach((btn, i) => {
+                btn.textContent = tempOptions[i];
+                btn.className = 'option';
+                
+                btn.onclick = () => {
+                    opButtons.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    speak(btn.textContent);
+                };
+
+                btn.ondblclick = () => {
+                    checkAnswer(btn.textContent, btn);
+                };
+            });
+        }
+
+        function checkAnswer(selected, btn) {
+            const correcta = niveles[currentLevel].correcta;
+            if (nextBtn.style.display === 'block') return;
+
+            if (selected === correcta) {
+                btn.classList.add('correct-choice');
+                feedbackDiv.innerHTML = '<span class="correct">¡Excelente! ✅</span>';
+                puntuacion++;
+                speak('Muy bien, es correcto.');
+                nextBtn.style.display = 'block';
+            } else {
+                feedbackDiv.innerHTML = '<span class="incorrect">Intenta otra vez ❌</span>';
+                speak('Esa no es, prueba de nuevo.');
+                btn.classList.add('selected');
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            loadLevel();
+        }
+
+        function showResults() {
+            showScreen('resultados');
+            document.getElementById('finalScore').textContent = `Lograste ${puntuacion} de ${totalNiveles} puntos.`;
+            const msg = puntuacion === totalNiveles ? "¡Eres un experto! Puntaje perfecto." : "¡Buen trabajo! Sigue practicando.";
+            document.getElementById('finalMessage').textContent = msg;
+            speak(msg);
+        }
+    </script>
+</body>
+</html>
